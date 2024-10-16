@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import User from '../models/userModel'
-import { IUser } from '../interfaces/userInterface'
+import { IUser } from '../types/userInterface'
 import { NotFoundError, UnauthorizedError } from '../utils/errors'
 
 export const signupService = async (
@@ -37,8 +37,10 @@ export const loginService = async (
         console.log('Login Service: Invalid credentials')
         throw new UnauthorizedError('Invalid credentials')
     }
-
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET as string, {
+    const payload = {
+        id: user.id,
+    }
+    const token = jwt.sign(payload, process.env.JWT_SECRET as string, {
         expiresIn: '1h',
     })
     return token
