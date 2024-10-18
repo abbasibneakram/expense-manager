@@ -5,11 +5,14 @@ import { AuthenticatedRequest } from '../middlesware/authMiddleware'; // Ensure 
 // Add a new expense
 export const addExpense = async (req: AuthenticatedRequest, res: Response) => {
     try {
-        const expenseData = req.body; // Validate this data as needed
-        const expense = await expenseService.addExpense(
-            req.user!.id,
-            expenseData,
-        );
+        const userId = req.user!.id;
+        const receipt = req.file ? req.file.path : '';
+        const expenseData = {
+            ...req.body, // Get the amount, category, and notes from the request body
+            receipt, // Add the receipt path to the expenseData
+        };
+        //const expenseData = req.body; // Validate this data as needed
+        const expense = await expenseService.addExpense(userId, expenseData);
         res.status(201).json(expense);
     } catch (error: unknown) {
         if (error instanceof Error) {

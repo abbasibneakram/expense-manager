@@ -1,10 +1,16 @@
 import { Router } from 'express';
 import * as expenseController from '../controllers/expenseController';
 import { authMiddleware } from '../middlesware/authMiddleware';
+import upload from '../configs/multerConfig';
 
 const router = Router();
 
-router.post('/add', authMiddleware, expenseController.addExpense);
+router.post(
+    '/add',
+    authMiddleware,
+    upload.single('receipt'),
+    expenseController.addExpense,
+);
 router.get('/all', authMiddleware, expenseController.getExpenses);
 router.put('/update/:id', authMiddleware, expenseController.updateExpense);
 router.delete('/delete/:id', authMiddleware, expenseController.deleteExpense);
