@@ -1,53 +1,67 @@
-import { Model, DataTypes, Optional } from 'sequelize'
-import sequelize from '../configs/dbCofig' // Ensure the spelling is correct
-import { IExpense } from '../types/expenseInterface'
-import User from './userModel'
+import { Model, DataTypes, Optional } from 'sequelize';
+import sequelize from '../configs/dbConfig';
+import { IExpense } from '../interfaces/expenseInterface';
+import User from './userModel'; // Ensure that User is imported after its definition
 
-// Define attributes for the Expense model
-interface ExpenseAttributes extends IExpense {}
-
-interface ExpenseCreationAttributes extends Optional<ExpenseAttributes, 'id'> {}
+// Optional allows 'id' to be omitted when creating a new Expense
+interface ExpenseCreationAttributes extends Optional<IExpense, 'id'> {}
 
 class Expense
-    extends Model<ExpenseAttributes, ExpenseCreationAttributes>
-    implements ExpenseAttributes
+    extends Model<IExpense, ExpenseCreationAttributes>
+    implements IExpense
 {
-    public id!: number
-    public amount!: number
-    public category!: string
-    public date!: Date
-    public notes?: string // Optional
-    public userId!: number // Foreign key
+    public id!: number;
+    public userId!: number;
+    public category!: string;
+    public amount!: number;
+    public date!: Date;
+    public notes?: string;
+    public receipt?: string;
 }
 
-// Initialize the Expense model
 Expense.init(
     {
-        id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-        amount: { type: DataTypes.FLOAT, allowNull: false },
-        category: { type: DataTypes.STRING, allowNull: false },
-        date: { type: DataTypes.DATE, allowNull: true },
-        notes: { type: DataTypes.STRING, allowNull: true },
+        id: {
+            type: DataTypes.INTEGER.UNSIGNED,
+            autoIncrement: true,
+            primaryKey: true,
+        },
         userId: {
-            // Explicitly define the foreign key
-            type: DataTypes.INTEGER,
+            type: DataTypes.INTEGER.UNSIGNED,
             allowNull: false,
             references: {
-                model: User, // Reference to User model
-                key: 'id', // Key in User model
+                model: User, // Reference the User model
+                key: 'id',
             },
+            onDelete: 'CASCADE',
+        },
+        category: {
+            type: DataTypes.STRING,
+            allowNull: false,
+        },
+        amount: {
+            type: DataTypes.FLOAT,
+            allowNull: false,
+        },
+        date: {
+            type: DataTypes.DATE,
+            allowNull: false,
+            defaultValue: DataTypes.NOW,
+        },
+        notes: {
+            type: DataTypes.TEXT,
+            allowNull: true,
+        },
+        receipt: {
+            type: DataTypes.STRING,
+            allowNull: true,
         },
     },
     {
         sequelize,
-        modelName: 'expense',
-        tableName: 'expenses', // Optional: specify table name
-        timestamps: true, // Optional: auto-manage createdAt and updatedAt fields
-    }
-)
+        tableName: 'expenses',
+    },
+);
 
-// Define relationships
-User.hasMany(Expense, { foreignKey: 'userId', onDelete: 'CASCADE' }) // Specify foreign key
-Expense.belongsTo(User, { foreignKey: 'userId' }) // Specify foreign key
-
-export default Expense
+// Define associations
+export default Expense;

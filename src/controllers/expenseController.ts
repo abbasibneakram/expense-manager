@@ -1,131 +1,156 @@
-import { Request, Response } from 'express'
-import * as expenseService from '../services/expenseService'
-import { IExpense } from '../types/expenseInterface'
-import { AuthenticatedRequest } from '../middlesware/authMiddleware'
+import { Request, Response } from 'express';
+import * as expenseService from '../services/expenseService';
+import { AuthenticatedRequest } from '../middlesware/authMiddleware'; // Ensure this is imported
 
-// Adding a new expense
-export const addExpense = async (
-    req: AuthenticatedRequest,
-    res: Response
-): Promise<void> => {
+// Add a new expense
+export const addExpense = async (req: AuthenticatedRequest, res: Response) => {
     try {
-        const expenseData: IExpense = { ...req.body, userId: req.user.id } // Assuming req.user contains authenticated user info
-        const newExpense = await expenseService.addExpense(expenseData)
-        res.status(201).json(newExpense)
-    } catch (error) {
-        handleError(res, error)
+        const expenseData = req.body; // Validate this data as needed
+        const expense = await expenseService.addExpense(
+            req.user!.id,
+            expenseData,
+        );
+        res.status(201).json(expense);
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.error('Error adding expense:', error);
+            res.status(500).json({ message: error.message });
+        } else {
+            console.error('Unexpected error adding expense:', error);
+            res.status(500).json({ message: 'An unexpected error occurred' });
+        }
     }
-}
+};
 
-// Getting all expenses for a user
-export const getExpenses = async (
-    req: AuthenticatedRequest,
-    res: Response
-): Promise<void> => {
+// Get all expenses for a specific user
+export const getExpenses = async (req: AuthenticatedRequest, res: Response) => {
     try {
-        const expenses = await expenseService.getExpenses(req.user.id)
-        res.status(200).json(expenses)
-    } catch (error) {
-        handleError(res, error)
+        const expenses = await expenseService.getExpenses(req.user!.id);
+        res.status(200).json(expenses);
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.error('Error fetching expenses:', error);
+            res.status(500).json({ message: error.message });
+        } else {
+            console.error('Unexpected error fetching expenses:', error);
+            res.status(500).json({ message: 'An unexpected error occurred' });
+        }
     }
-}
+};
 
-// Updating an existing expense
+// Update an existing expense
 export const updateExpense = async (
     req: AuthenticatedRequest,
-    res: Response
-): Promise<void> => {
+    res: Response,
+) => {
     try {
-        const { id } = req.params
-        await expenseService.updateExpense(Number(id), {
-            ...req.body,
-            userId: req.user.id,
-        })
-        res.status(200).json({ message: 'Expense updated successfully' })
-    } catch (error) {
-        handleError(res, error)
+        const expenseId = Number(req.params.id); // Ensure you validate this ID
+        const updatedData = req.body; // Validate this data as needed
+        await expenseService.updateExpense(
+            req.user!.id,
+            expenseId,
+            updatedData,
+        );
+        res.status(204).send(); // No content
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.error('Error updating expense:', error);
+            res.status(500).json({ message: error.message });
+        } else {
+            console.error('Unexpected error updating expense:', error);
+            res.status(500).json({ message: 'An unexpected error occurred' });
+        }
     }
-}
+};
 
-// Deleting an expense
+// Delete an expense
 export const deleteExpense = async (
     req: AuthenticatedRequest,
-    res: Response
-): Promise<void> => {
+    res: Response,
+) => {
     try {
-        const { id } = req.params
-        await expenseService.deleteExpense(Number(id))
-        res.status(200).json({ message: 'Expense deleted successfully' })
-    } catch (error) {
-        handleError(res, error)
+        const expenseId = Number(req.params.id); // Ensure you validate this ID
+        await expenseService.deleteExpense(req.user!.id, expenseId);
+        res.status(204).send(); // No content
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.error('Error deleting expense:', error);
+            res.status(500).json({ message: error.message });
+        } else {
+            console.error('Unexpected error deleting expense:', error);
+            res.status(500).json({ message: 'An unexpected error occurred' });
+        }
     }
-}
+};
 
-// Filtering expenses by date range
+// Filter expenses by date range for a specific user
 export const filterExpensesByDateRange = async (
     req: AuthenticatedRequest,
-    res: Response
-): Promise<void> => {
+    res: Response,
+) => {
     try {
-        const { startDate, endDate } = req.query
-        if (!startDate || !endDate) {
-            res.status(400).json({
-                message: 'Start date and end date are required.',
-            })
-            return
-        }
-
+        const { startDate, endDate } = req.body; // Validate these dates
         const expenses = await expenseService.filterExpensesByDateRange(
-            req.user.id,
-            new Date(startDate as string),
-            new Date(endDate as string)
-        )
-        res.status(200).json(expenses)
-    } catch (error) {
-        handleError(res, error)
+            req.user!.id,
+            new Date(startDate),
+            new Date(endDate),
+        );
+        res.status(200).json(expenses);
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.error('Error filtering expenses by date range:', error);
+            res.status(500).json({ message: error.message });
+        } else {
+            console.error(
+                'Unexpected error filtering expenses by date range:',
+                error,
+            );
+            res.status(500).json({ message: 'An unexpected error occurred' });
+        }
     }
-}
+};
 
-// Filtering expenses by category
+// Filter expenses by category for a specific user
 export const filterExpensesByCategory = async (
     req: AuthenticatedRequest,
-    res: Response
-): Promise<void> => {
+    res: Response,
+) => {
     try {
-        const { category } = req.query
-        if (!category) {
-            res.status(400).json({ message: 'Category is required.' })
-            return
-        }
-
+        const { category } = req.body; // Validate this category
         const expenses = await expenseService.filterExpensesByCategory(
-            req.user.id,
-            category as string
-        )
-        res.status(200).json(expenses)
-    } catch (error) {
-        handleError(res, error)
+            req.user!.id,
+            category,
+        );
+        res.status(200).json(expenses);
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.error('Error filtering expenses by category:', error);
+            res.status(500).json({ message: error.message });
+        } else {
+            console.error(
+                'Unexpected error filtering expenses by category:',
+                error,
+            );
+            res.status(500).json({ message: 'An unexpected error occurred' });
+        }
     }
-}
+};
 
-// Getting expense summary
+// Get summary of expenses for a specific user
 export const getExpenseSummary = async (
     req: AuthenticatedRequest,
-    res: Response
-): Promise<void> => {
+    res: Response,
+) => {
     try {
-        const summary = await expenseService.getExpenseSummary(req.user.id)
-        res.status(200).json(summary)
-    } catch (error) {
-        handleError(res, error)
+        const summary = await expenseService.getExpenseSummary(req.user!.id);
+        res.status(200).json(summary);
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.error('Error fetching expense summary:', error);
+            res.status(500).json({ message: error.message });
+        } else {
+            console.error('Unexpected error fetching expense summary:', error);
+            res.status(500).json({ message: 'An unexpected error occurred' });
+        }
     }
-}
-
-// Centralized error handler
-const handleError = (res: Response, error: unknown): void => {
-    if (error instanceof Error) {
-        res.status(500).json({ message: error.message })
-    } else {
-        res.status(500).json({ message: 'An unexpected error occurred.' })
-    }
-}
+};
