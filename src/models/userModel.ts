@@ -1,6 +1,5 @@
 import { Model, DataTypes, Optional } from 'sequelize';
 import sequelize from '../configs/dbConfig';
-import Expense from './expenseModel'; // Ensure that Expense is imported after its definition
 
 export interface IUser {
     id?: number;
@@ -45,6 +44,5 @@ User.init(
         tableName: 'users',
     },
 );
-
 
 export default User;

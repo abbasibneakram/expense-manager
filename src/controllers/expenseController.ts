@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import * as expenseService from '../services/expenseService';
 import { AuthenticatedRequest } from '../middlesware/authMiddleware'; // Ensure this is imported
 
